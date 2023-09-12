@@ -7,7 +7,6 @@ import model.Currency;
 import repository.CurrencyRepository;
 import util.Utilities;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -21,10 +20,10 @@ import java.util.List;
 public class CurrenciesServlet extends HttpServlet {
     private CurrencyRepository repository;
 
-
     @Override
-    public void init(ServletConfig config) throws ServletException {
-        repository = new CurrencyRepository();
+    public void init() throws ServletException {
+        super.init();
+        repository = CurrencyRepository.getInstance();
     }
 
     @Override
@@ -46,7 +45,7 @@ public class CurrenciesServlet extends HttpServlet {
         String sign = request.getParameter("sign");
 
         if (!Utilities.areValidCurrenciesFields(code, name, sign)) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ResponseMessage.MESSAGE_PARAMETERS_ARE_INCORRECT.getMessage());
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ResponseMessage.MESSAGE_CUR_PARAMETERS_ARE_INCORRECT.getMessage());
             return;
         }
 

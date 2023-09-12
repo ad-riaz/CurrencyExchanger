@@ -1,8 +1,8 @@
 package repository;
 
 import model.Currency;
-import service.DbDriverLoader;
-import service.PropsReader;
+import service.DatabaseManager;
+import util.Utilities;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -10,30 +10,37 @@ import java.util.List;
 import java.util.Optional;
 
 public class CurrencyRepository implements CrudRepository<Currency> {
-    private static final String dbSource = PropsReader.getProperty("dbSource");
+    private static CurrencyRepository instance;
+    private final DatabaseManager dbManager;
 
-    static {
-        try {
-            DbDriverLoader.load();
-        } catch(Exception e) {
-            e.printStackTrace();
-        };
+    private CurrencyRepository() {
+        dbManager = DatabaseManager.getInstance();
     }
 
-    public CurrencyRepository() {
-
+    public static CurrencyRepository getInstance() {
+        if (instance == null) {
+            synchronized (CurrencyRepository.class) {
+                if (instance == null) {
+                    instance = new CurrencyRepository();
+                }
+            }
+        }
+        return instance;
     }
 
     @Override
     public void save(Currency entity) {
         String query = "INSERT INTO currencies VALUES (NULL, ?, ?, ?)";
 
-        try(Connection connection = DriverManager.getConnection(dbSource)) {
+        try {
+            dbManager.openConnection();
+            Connection connection = dbManager.connection;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, entity.getCode());
             statement.setString(2,entity.getFullName());
             statement.setString(3, entity.getSign());
             statement.executeUpdate();
+            dbManager.closeConnection();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -44,7 +51,9 @@ public class CurrencyRepository implements CrudRepository<Currency> {
         String query = "SELECT * FROM currencies WHERE id = ?";
         Currency currency = null;
 
-        try(Connection connection = DriverManager.getConnection(dbSource)) {
+        try {
+            dbManager.openConnection();
+            Connection connection = dbManager.connection;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setLong(1, id);
             ResultSet resultSet = statement.executeQuery();
@@ -52,6 +61,7 @@ public class CurrencyRepository implements CrudRepository<Currency> {
                 currency = createNewCurrency(resultSet);
             }
             resultSet.close();
+            dbManager.closeConnection();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -63,7 +73,9 @@ public class CurrencyRepository implements CrudRepository<Currency> {
         Currency currency = null;
         String query = "SELECT * FROM currencies WHERE code = ?";
 
-        try (Connection connection = DriverManager.getConnection(dbSource)) {
+        try {
+            dbManager.openConnection();
+            Connection connection = dbManager.connection;
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, code);
             ResultSet resultSet = statement.executeQuery();
@@ -71,6 +83,7 @@ public class CurrencyRepository implements CrudRepository<Currency> {
                 currency = createNewCurrency(resultSet);
             }
             resultSet.close();
+            dbManager.closeConnection();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -83,7 +96,9 @@ public class CurrencyRepository implements CrudRepository<Currency> {
         List<Currency> currencies = new ArrayList<>();
         String query = "SELECT * FROM currencies";
 
-        try(Connection connection = DriverManager.getConnection(dbSource)) {
+        try {
+            dbManager.openConnection();
+            Connection connection = dbManager.connection;
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
 
@@ -92,6 +107,7 @@ public class CurrencyRepository implements CrudRepository<Currency> {
                 currencies.add(cur);
             }
             resultSet.close();
+            dbManager.closeConnection();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -101,7 +117,6 @@ public class CurrencyRepository implements CrudRepository<Currency> {
 
     @Override
     public void update(Currency entity) {
-        Currency currency = (Currency) entity;
         String query =  "UPDATE currencies " +
                         "SET " +
                             "code = ?," +
@@ -109,14 +124,16 @@ public class CurrencyRepository implements CrudRepository<Currency> {
                             "sign = ?" +
                         "WHERE id = ?";
 
-        try(Connection connection = DriverManager.getConnection(dbSource)) {
+        try {
+            dbManager.openConnection();
+            Connection connection = dbManager.connection;
             PreparedStatement statement = connection.prepareStatement(query);
-            statement.setString(1, currency.getCode());
-            statement.setString(2, currency.getFullName());
-            statement.setString(3, currency.getSign());
-            statement.setLong(4, currency.getId());
-
+            statement.setString(1, entity.getCode());
+            statement.setString(2, entity.getFullName());
+            statement.setString(3, entity.getSign());
+            statement.setLong(4, entity.getId());
             statement.executeUpdate();
+            dbManager.closeConnection();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -125,14 +142,7 @@ public class CurrencyRepository implements CrudRepository<Currency> {
     @Override
     public void delete(Long id) {
         String query = "DELETE FROM currencies WHERE id = ?";
-
-        try(Connection connection = DriverManager.getConnection(dbSource)) {
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setLong(1, id);
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        Utilities.deleteEntityById(query, id, dbManager);
     }
 
     private Currency createNewCurrency(ResultSet resultSet) throws SQLException {

@@ -6,4 +6,5 @@ public class DbDriverLoader {
     public static void load() throws ClassNotFoundException {
         Class.forName(driver);
     }
+
 }

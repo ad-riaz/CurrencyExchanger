@@ -27,10 +27,7 @@ public class Currency {
     }
 
     public Currency(String code, String fullName, String sign) {
-        id = null;
-        this.code = code;
-        this.fullName = fullName;
-        this.sign = sign;
+        this(null, code, fullName, sign);
     }
 
     public Long getId() {

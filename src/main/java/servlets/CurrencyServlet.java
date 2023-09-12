@@ -21,10 +21,9 @@ public class CurrencyServlet extends HttpServlet {
 
     private CurrencyRepository repository;
 
-// FIXME: Fix the usage of repository
     @Override
-    public void init(ServletConfig config) throws ServletException {
-        repository = new CurrencyRepository();
+    public void init(ServletConfig config) {
+        repository = CurrencyRepository.getInstance();
     }
 
     @Override
