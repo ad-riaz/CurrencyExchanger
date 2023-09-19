@@ -33,14 +33,13 @@ public class CurrencyRepository implements CrudRepository<Currency> {
         String query = "INSERT INTO currencies VALUES (NULL, ?, ?, ?)";
 
         try {
-            dbManager.openConnection();
-            Connection connection = dbManager.connection;
+            Connection connection = dbManager.getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, entity.getCode());
             statement.setString(2,entity.getFullName());
             statement.setString(3, entity.getSign());
             statement.executeUpdate();
-            dbManager.closeConnection();
+            dbManager.closeConnection(connection);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -52,8 +51,7 @@ public class CurrencyRepository implements CrudRepository<Currency> {
         Currency currency = null;
 
         try {
-            dbManager.openConnection();
-            Connection connection = dbManager.connection;
+            Connection connection = dbManager.getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setLong(1, id);
             ResultSet resultSet = statement.executeQuery();
@@ -61,7 +59,7 @@ public class CurrencyRepository implements CrudRepository<Currency> {
                 currency = createNewCurrency(resultSet);
             }
             resultSet.close();
-            dbManager.closeConnection();
+            dbManager.closeConnection(connection);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -74,8 +72,7 @@ public class CurrencyRepository implements CrudRepository<Currency> {
         String query = "SELECT * FROM currencies WHERE code = ?";
 
         try {
-            dbManager.openConnection();
-            Connection connection = dbManager.connection;
+            Connection connection = dbManager.getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, code);
             ResultSet resultSet = statement.executeQuery();
@@ -83,7 +80,7 @@ public class CurrencyRepository implements CrudRepository<Currency> {
                 currency = createNewCurrency(resultSet);
             }
             resultSet.close();
-            dbManager.closeConnection();
+            dbManager.closeConnection(connection);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -97,8 +94,7 @@ public class CurrencyRepository implements CrudRepository<Currency> {
         String query = "SELECT * FROM currencies";
 
         try {
-            dbManager.openConnection();
-            Connection connection = dbManager.connection;
+            Connection connection = dbManager.getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
 
@@ -107,7 +103,7 @@ public class CurrencyRepository implements CrudRepository<Currency> {
                 currencies.add(cur);
             }
             resultSet.close();
-            dbManager.closeConnection();
+            dbManager.closeConnection(connection);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -125,15 +121,14 @@ public class CurrencyRepository implements CrudRepository<Currency> {
                         "WHERE id = ?";
 
         try {
-            dbManager.openConnection();
-            Connection connection = dbManager.connection;
+            Connection connection = dbManager.getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, entity.getCode());
             statement.setString(2, entity.getFullName());
             statement.setString(3, entity.getSign());
             statement.setLong(4, entity.getId());
             statement.executeUpdate();
-            dbManager.closeConnection();
+            dbManager.closeConnection(connection);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

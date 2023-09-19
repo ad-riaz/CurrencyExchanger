@@ -31,13 +31,13 @@ public class CurrencyServlet extends HttpServlet {
         String code = request.getPathInfo().toUpperCase();
 
         if (code == null || code.equals("/")) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ResponseMessage.MESSAGE_CODE_IS_MISSING.getMessage());
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ResponseMessage.MESSAGE_CUR_CODE_IS_MISSING.getMessage());
             return;
         }
 
         Optional<Currency> currency = repository.findByCode(code.replace("/", ""));
         if (!currency.isPresent()) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, ResponseMessage.MESSAGE_CURRENCY_IS_NOT_FOUND.getMessage());
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, ResponseMessage.MESSAGE_CUR_IS_NOT_FOUND.getMessage());
             return;
         }
 

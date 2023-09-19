@@ -3,11 +3,14 @@ package service;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class DatabaseManager {
     private static DatabaseManager instance;
-    public Connection connection;
     private static final String dbSource = PropsReader.getProperty("dbSource");
+    private HikariDataSource dataSource;
+
 
     private DatabaseManager() {
         // Loading JDBC driver
@@ -16,6 +19,11 @@ public class DatabaseManager {
         } catch(Exception e) {
             e.printStackTrace();
         };
+
+        // Initializing HikariCP connection pool
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(dbSource);
+        dataSource = new HikariDataSource(config);
     }
 
     public static DatabaseManager getInstance() {
@@ -29,12 +37,11 @@ public class DatabaseManager {
         return instance;
     }
 
-    public void openConnection() throws SQLException {
-        // Database connection initialisation
-        connection = DriverManager.getConnection(dbSource);
+    public synchronized Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
     }
 
-    public void closeConnection() throws SQLException {
+    public synchronized void closeConnection(Connection connection) throws SQLException {
         if (connection != null && !connection.isClosed()) {
             connection.close();
         }

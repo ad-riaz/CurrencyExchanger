@@ -50,7 +50,7 @@ public class CurrenciesServlet extends HttpServlet {
         }
 
         if (repository.findByCode(code).isPresent()) {
-            response.sendError(HttpServletResponse.SC_CONFLICT, ResponseMessage.MESSAGE_CURRENCY_IS_ALREADY_ADDED.getMessage());
+            response.sendError(HttpServletResponse.SC_CONFLICT, ResponseMessage.MESSAGE_CUR_IS_ALREADY_ADDED.getMessage());
             return;
         }
 

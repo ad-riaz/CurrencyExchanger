@@ -2,9 +2,16 @@ package util;
 
 import service.DatabaseManager;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.stream.Collectors;
 
 public class Utilities {
 
@@ -24,14 +31,43 @@ public class Utilities {
 
     public static void deleteEntityById(String query, Long id, DatabaseManager dbManager) {
         try {
-            dbManager.openConnection();
-            Connection connection = dbManager.connection;
+            Connection connection = dbManager.getConnection();
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
-            dbManager.closeConnection();
+            dbManager.closeConnection(connection);
         } catch(SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean isStringDouble(String string) {
+        try {
+            Double.parseDouble(string);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public static String getParameterValue(String parameterKey, HttpServletRequest request) {
+        try {
+            Part part = request.getPart(parameterKey);
+            return getStringFromInputStream(part.getInputStream());
+        } catch (Exception e) {
+//            FIXME: Fix sout
+            System.out.println(e.getMessage());
+            return null;
+        }
+    }
+
+    public static String getStringFromInputStream(InputStream inputStream) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            return reader.lines().collect(Collectors.joining("\n"));
+        } catch (IOException e) {
+//            FIXME: Fix sout
+            System.out.println("Error closing input stream: " + e.getMessage());
+            return null;
         }
     }
 }

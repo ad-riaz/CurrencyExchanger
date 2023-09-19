@@ -64,7 +64,7 @@ public class ExchangeRatesServlet extends HttpServlet {
         Optional<Currency> targetCurrency = currencyRepository.findByCode(targetCurrencyCode);
 
         if (!baseCurrency.isPresent() || !targetCurrency.isPresent()) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, ResponseMessage.MESSAGE_CURRENCY_IS_NOT_FOUND.getMessage());
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, ResponseMessage.MESSAGE_CUR_IS_NOT_FOUND.getMessage());
             return;
         }
 

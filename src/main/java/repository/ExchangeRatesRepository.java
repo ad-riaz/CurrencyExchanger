@@ -35,14 +35,13 @@ public class ExchangeRatesRepository implements CrudRepository<ExchangeRate> {
         String query = "INSERT INTO ExchangeRates VALUES (NULL, ?, ?, ?)";
 
         try {
-            dbManager.openConnection();
-            Connection connection = dbManager.connection;
+            Connection connection = dbManager.getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setLong(1, entity.getBaseCurrency().getId());
             statement.setLong(2, entity.getTargetCurrency().getId());
             statement.setBigDecimal(3, entity.getRate());
             statement.executeUpdate();
-            dbManager.closeConnection();
+            dbManager.closeConnection(connection);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -54,8 +53,7 @@ public class ExchangeRatesRepository implements CrudRepository<ExchangeRate> {
         Optional<ExchangeRate> entity = Optional.ofNullable(null);
 
         try {
-            dbManager.openConnection();
-            Connection connection = dbManager.connection;
+            Connection connection = dbManager.getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setLong(1, id);
             ResultSet resultSet = statement.executeQuery();
@@ -72,7 +70,7 @@ public class ExchangeRatesRepository implements CrudRepository<ExchangeRate> {
                 entity = Optional.ofNullable(exchangeRate);
             }
 
-            dbManager.closeConnection();
+            dbManager.closeConnection(connection);
         } catch(SQLException e) {
             throw new RuntimeException(e);
         }
@@ -95,8 +93,7 @@ public class ExchangeRatesRepository implements CrudRepository<ExchangeRate> {
                     "   WHERE c.code = ? AND c2.code = ?";
 
         try {
-            dbManager.openConnection();
-            Connection connection = dbManager.connection;
+            Connection connection = dbManager.getConnection();
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, baseCode);
             preparedStatement.setString(2, targetCode);
@@ -111,6 +108,7 @@ public class ExchangeRatesRepository implements CrudRepository<ExchangeRate> {
 
                 entity = Optional.ofNullable(exchangeRate);
             }
+            dbManager.closeConnection(connection);
         } catch(SQLException e) {
             throw new RuntimeException(e);
         }
@@ -124,8 +122,7 @@ public class ExchangeRatesRepository implements CrudRepository<ExchangeRate> {
         String query = "SELECT * FROM ExchangeRates";
 
         try {
-            dbManager.openConnection();
-            Connection connection = dbManager.connection;
+            Connection connection = dbManager.getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
 
@@ -140,7 +137,7 @@ public class ExchangeRatesRepository implements CrudRepository<ExchangeRate> {
                 rates.add(exchangeRate);
             }
             resultSet.close();
-            dbManager.closeConnection();
+            dbManager.closeConnection(connection);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -150,23 +147,17 @@ public class ExchangeRatesRepository implements CrudRepository<ExchangeRate> {
 
     @Override
     public void update(ExchangeRate entity) {
-        String query = "UPDATE ExchangeRates" +
-                        "SET " +
-                            "BaseCurrencyId = ?," +
-                            "TargetCurrencyId = ?," +
-                            "Rate = ?" +
-                        "WHERE id = ?";
+        String query = "UPDATE ExchangeRates SET BaseCurrencyId = ?, TargetCurrencyId = ?, rate = ? where id = ?";
 
         try {
-            dbManager.openConnection();
-            Connection connection = dbManager.connection;
+            Connection connection = dbManager.getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setLong(1, entity.getBaseCurrency().getId());
             statement.setLong(2, entity.getTargetCurrency().getId());
             statement.setBigDecimal(3, entity.getRate());
             statement.setLong(4, entity.getId());
             statement.executeUpdate();
-            dbManager.closeConnection();
+            dbManager.closeConnection(connection);
         } catch(SQLException e) {
             throw new RuntimeException(e);
         }
