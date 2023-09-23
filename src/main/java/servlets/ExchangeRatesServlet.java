@@ -46,8 +46,8 @@ public class ExchangeRatesServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String baseCurrencyCode = request.getParameter("baseCurrencyCode");
-        String targetCurrencyCode = request.getParameter("targetCurrencyCode");
+        String baseCurrencyCode = request.getParameter("baseCurrencyCode").toUpperCase();
+        String targetCurrencyCode = request.getParameter("targetCurrencyCode").toUpperCase();
         String rate = request.getParameter("rate");
 
         if (!Utilities.areValidExchangeRatesFields(baseCurrencyCode, targetCurrencyCode, rate)) {

@@ -40,9 +40,9 @@ public class CurrenciesServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String code = request.getParameter("code");
-        String name = request.getParameter("name");
-        String sign = request.getParameter("sign");
+        String code = request.getParameter("code").toUpperCase();
+        String name = request.getParameter("name").toUpperCase();
+        String sign = request.getParameter("sign").toUpperCase();
 
         if (!Utilities.areValidCurrenciesFields(code, name, sign)) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, ResponseMessage.MESSAGE_CUR_PARAMETERS_ARE_INCORRECT.getMessage());

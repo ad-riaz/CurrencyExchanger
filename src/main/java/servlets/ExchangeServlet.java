@@ -34,9 +34,9 @@ public class ExchangeServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String fromParameter = request.getParameter("from");
-        String toParameter = request.getParameter("to");
-        String amountParameter = request.getParameter("amount");
+        String fromParameter = request.getParameter("from").toUpperCase();
+        String toParameter = request.getParameter("to").toUpperCase();
+        String amountParameter = request.getParameter("amount").toUpperCase();
         BigDecimal amount;
         BigDecimal convertedAmount;
 
@@ -70,7 +70,7 @@ public class ExchangeServlet extends HttpServlet {
         }
 
         amount = new BigDecimal(amountParameter).setScale(2, RoundingMode.DOWN);
-        convertedAmount = amount.multiply(rate).setScale(2, RoundingMode.DOWN);
+        convertedAmount = amount.multiply(rate).setScale(3, RoundingMode.DOWN);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
@@ -92,14 +92,14 @@ public class ExchangeServlet extends HttpServlet {
 
         Optional<ExchangeRate> reverseExchangeRate = exchangeRatesRepository.findByBaseCodeAndTargetCode(targetCode, baseCode);
         if (reverseExchangeRate.isPresent()) {
-            return new BigDecimal("1").divide(reverseExchangeRate.get().getRate(), 2, RoundingMode.DOWN);
+            return new BigDecimal("1").divide(reverseExchangeRate.get().getRate(), 3, RoundingMode.DOWN);
         }
 
         Optional<ExchangeRate> exchangeRateUSD_A = exchangeRatesRepository.findByBaseCodeAndTargetCode("USD", baseCode);
         Optional<ExchangeRate> exchangeRateUSD_B = exchangeRatesRepository.findByBaseCodeAndTargetCode("USD", targetCode);
 
         if (exchangeRateUSD_A.isPresent() && exchangeRateUSD_B.isPresent()) {
-            return exchangeRateUSD_A.get().getRate().divide(exchangeRateUSD_B.get().getRate(), 2, RoundingMode.DOWN);
+            return exchangeRateUSD_B.get().getRate().divide(exchangeRateUSD_A.get().getRate(), 3, RoundingMode.DOWN);
         }
 
         return null;
