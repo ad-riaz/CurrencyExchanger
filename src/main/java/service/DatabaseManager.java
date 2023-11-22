@@ -1,14 +1,13 @@
 package service;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 public class DatabaseManager {
     private static DatabaseManager instance;
-    private static final String dbSource = PropsReader.getProperty("dbSource");
+    private static final String dbSource = PropertiesReader.getProperty("dbSource");
     private HikariDataSource dataSource;
 
 
