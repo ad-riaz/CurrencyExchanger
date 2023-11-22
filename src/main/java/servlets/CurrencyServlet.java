@@ -1,6 +1,5 @@
 package servlets;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import enums.ResponseMessage;
 import model.Currency;
@@ -31,22 +30,22 @@ public class CurrencyServlet extends HttpServlet {
         String code = request.getPathInfo().toUpperCase();
 
         if (code == null || code.equals("/")) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ResponseMessage.MESSAGE_CUR_CODE_IS_MISSING.getMessage());
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ResponseMessage.CURRENCY_CODE_IS_MISSING.getMessage());
             return;
         }
 
         Optional<Currency> currency = repository.findByCode(code.replace("/", ""));
+        
         if (!currency.isPresent()) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, ResponseMessage.MESSAGE_CUR_IS_NOT_FOUND.getMessage());
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, ResponseMessage.CURRENCY_IS_NOT_FOUND_IN_DB.getMessage());
             return;
         }
 
-        Gson gson = new GsonBuilder().create();
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter writer = response.getWriter();
 
-        writer.print(gson.toJson(currency.get()));
+        writer.print(new GsonBuilder().create().toJson(currency.get()));
         writer.close();
     }
 }
