@@ -1,12 +1,12 @@
 package servlets;
 
 import com.google.gson.GsonBuilder;
-import enums.ResponseMessage;
 import model.Currency;
+import repository.CurrencyRepo;
 import repository.CurrencyRepository;
+import util.ErrorResponse;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -22,30 +22,35 @@ public class CurrencyServlet extends HttpServlet {
 
     @Override
     public void init(ServletConfig config) {
-        repository = CurrencyRepository.getInstance();
+        repository = CurrencyRepo.getInstance();
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String code = request.getPathInfo().toUpperCase();
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            String code = request.getPathInfo().toUpperCase();
 
-        if (code == null || code.equals("/")) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ResponseMessage.CURRENCY_CODE_IS_MISSING.getMessage());
+            if (code == null || code.equals("/")) {
+                ErrorResponse.sendCurrencyCodeIsMissingError(response);
+                return;
+            }
+
+            Optional<Currency> currency = repository.findByCode(code.replace("/", ""));
+            
+            if (!currency.isPresent()) {
+                ErrorResponse.sendCurrencyIsNotFoundInListError(response);
+                return;
+            }
+
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            PrintWriter writer = response.getWriter();
+
+            writer.print(new GsonBuilder().create().toJson(currency.get()));
+            writer.close();
+        } catch (IOException e) {
+            ErrorResponse.sendInternalServerError(response, e.getMessage());
             return;
         }
-
-        Optional<Currency> currency = repository.findByCode(code.replace("/", ""));
-        
-        if (!currency.isPresent()) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, ResponseMessage.CURRENCY_IS_NOT_FOUND_IN_DB.getMessage());
-            return;
-        }
-
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        PrintWriter writer = response.getWriter();
-
-        writer.print(new GsonBuilder().create().toJson(currency.get()));
-        writer.close();
     }
 }

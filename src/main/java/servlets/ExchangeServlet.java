@@ -5,8 +5,8 @@ import enums.ResponseMessage;
 import model.Currency;
 import model.Exchange;
 import model.ExchangeRate;
-import repository.CurrencyRepository;
-import repository.ExchangeRatesRepository;
+import repository.CurrencyRepo;
+import repository.ExchangeRatesRepo;
 import util.Utilities;
 
 import javax.servlet.*;
@@ -22,14 +22,14 @@ import org.apache.commons.lang3.StringUtils;
 @WebServlet(name = "ExchangeServlet", value = "/exchange")
 public class ExchangeServlet extends HttpServlet {
 
-    private ExchangeRatesRepository exchangeRatesRepository;
-    private CurrencyRepository currencyRepository;
+    private ExchangeRatesRepo exchangeRatesRepository;
+    private CurrencyRepo currencyRepository;
 
     @Override
     public void init() throws ServletException {
         super.init();
-        exchangeRatesRepository = ExchangeRatesRepository.getInstance();
-        currencyRepository = CurrencyRepository.getInstance();
+        exchangeRatesRepository = ExchangeRatesRepo.getInstance();
+        currencyRepository = CurrencyRepo.getInstance();
     }
 
     @Override
@@ -43,18 +43,18 @@ public class ExchangeServlet extends HttpServlet {
         // If parameters are null or empty then send error message
         if (StringUtils.isEmpty(fromParameter) ||
             StringUtils.isEmpty(toParameter)) {
-            sendExchangeResponseMessage(response, ResponseMessage.MESSAGE_CUR_IS_NOT_FOUND);
+            sendExchangeResponseMessage(response, ResponseMessage.CURRENCY_IS_NOT_FOUND_IN_DB);
             return;
         }
 
-        if (StringUtils.isEmpty(amountParameter) && !Utilities.isStringDouble(amountParameter)) {
+        if (StringUtils.isEmpty(amountParameter) && !Utilities.isDouble(amountParameter)) {
             sendExchangeResponseMessage(response, ResponseMessage.MESSAGE_AMOUNT_IS_NOT_A_NUMBER);
             return;
         }
 
         // If currencies are not available then send error message
         if (!areCurrenciesValid(fromParameter, toParameter)) {
-            sendExchangeResponseMessage(response, ResponseMessage.MESSAGE_CUR_IS_NOT_FOUND);
+            sendExchangeResponseMessage(response, ResponseMessage.CURRENCY_IS_NOT_FOUND_IN_DB);
             return;
         }
 
@@ -65,7 +65,7 @@ public class ExchangeServlet extends HttpServlet {
         BigDecimal rate = getExchangeRate(fromParameter, toParameter);
 
         if (rate == null) {
-            sendExchangeResponseMessage(response, ResponseMessage.MESSAGE_ER_IS_NOT_FOUND);
+            sendExchangeResponseMessage(response, ResponseMessage.EXCHANGE_RATE_IS_NOT_FOUND);
             return;
         }
 
@@ -87,16 +87,16 @@ public class ExchangeServlet extends HttpServlet {
 
     private BigDecimal getExchangeRate(String baseCode, String targetCode) {
         BigDecimal rate;
-        Optional<ExchangeRate> exchangeRate = exchangeRatesRepository.findByBaseCodeAndTargetCode(baseCode, targetCode);
+        Optional<ExchangeRate> exchangeRate = exchangeRatesRepository.findByCodes(baseCode, targetCode);
         if (exchangeRate.isPresent()) return exchangeRate.get().getRate();
 
-        Optional<ExchangeRate> reverseExchangeRate = exchangeRatesRepository.findByBaseCodeAndTargetCode(targetCode, baseCode);
+        Optional<ExchangeRate> reverseExchangeRate = exchangeRatesRepository.findByCodes(targetCode, baseCode);
         if (reverseExchangeRate.isPresent()) {
             return new BigDecimal("1").divide(reverseExchangeRate.get().getRate(), 3, RoundingMode.DOWN);
         }
 
-        Optional<ExchangeRate> exchangeRateUSD_A = exchangeRatesRepository.findByBaseCodeAndTargetCode("USD", baseCode);
-        Optional<ExchangeRate> exchangeRateUSD_B = exchangeRatesRepository.findByBaseCodeAndTargetCode("USD", targetCode);
+        Optional<ExchangeRate> exchangeRateUSD_A = exchangeRatesRepository.findByCodes("USD", baseCode);
+        Optional<ExchangeRate> exchangeRateUSD_B = exchangeRatesRepository.findByCodes("USD", targetCode);
 
         if (exchangeRateUSD_A.isPresent() && exchangeRateUSD_B.isPresent()) {
             return exchangeRateUSD_B.get().getRate().divide(exchangeRateUSD_A.get().getRate(), 3, RoundingMode.DOWN);

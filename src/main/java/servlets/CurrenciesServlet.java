@@ -1,10 +1,10 @@
 package servlets;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import enums.ResponseMessage;
 import model.Currency;
+import repository.CurrencyRepo;
 import repository.CurrencyRepository;
+import util.ErrorResponse;
 import util.Utilities;
 
 import javax.servlet.ServletException;
@@ -23,34 +23,39 @@ public class CurrenciesServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         super.init();
-        repository = CurrencyRepository.getInstance();
+        repository = CurrencyRepo.getInstance();
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         List<Currency> currencies = repository.findAll();
-        Gson gson = new GsonBuilder().create();
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        PrintWriter writer = response.getWriter();
+        
+        try {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            PrintWriter writer = response.getWriter();
 
-        writer.print(gson.toJson(currencies));
-        writer.close();
+            writer.print(new GsonBuilder().create().toJson(currencies));
+            writer.close();
+        } catch (IOException e) {
+            ErrorResponse.sendInternalServerError(response, e.getMessage());
+            return;
+        }
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         String code = request.getParameter("code").toUpperCase();
         String name = request.getParameter("name").toUpperCase();
         String sign = request.getParameter("sign").toUpperCase();
 
-        if (!Utilities.areValidCurrenciesFields(code, name, sign)) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ResponseMessage.MESSAGE_CUR_PARAMETERS_ARE_INCORRECT.getMessage());
+        if (!Utilities.areValidCurrencyFields(code, name, sign)) {
+            ErrorResponse.sendCurrencyParametersAreNotValidError(response);
             return;
         }
 
         if (repository.findByCode(code).isPresent()) {
-            response.sendError(HttpServletResponse.SC_CONFLICT, ResponseMessage.MESSAGE_CUR_IS_ALREADY_ADDED.getMessage());
+            ErrorResponse.sendCurrencyIsAlreadyExistsError(response);
             return;
         }
 

@@ -1,12 +1,13 @@
 package servlets;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import enums.ResponseMessage;
 import model.Currency;
 import model.ExchangeRate;
+import repository.CurrencyRepo;
 import repository.CurrencyRepository;
+import repository.ExchangeRatesRepo;
 import repository.ExchangeRatesRepository;
+import util.ErrorResponse;
 import util.Utilities;
 
 import javax.servlet.ServletException;
@@ -29,34 +30,45 @@ public class ExchangeRatesServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         super.init();
-        exchangeRatesRepository = ExchangeRatesRepository.getInstance();
-        currencyRepository = CurrencyRepository.getInstance();
+        exchangeRatesRepository = ExchangeRatesRepo.getInstance();
+        currencyRepository = CurrencyRepo.getInstance();
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         List<ExchangeRate> exchangeRates = exchangeRatesRepository.findAll();
-        Gson gson = new GsonBuilder().create();
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        PrintWriter writer = response.getWriter();
-        writer.print(gson.toJson(exchangeRates));
-        writer.close();
+
+        try {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            PrintWriter writer = response.getWriter();
+        
+            writer.print(new GsonBuilder().create().toJson(exchangeRates));
+            writer.close();
+        } catch (IOException e) {
+            ErrorResponse.sendInternalServerError(response, e.getMessage());
+            return;
+        }
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         String baseCurrencyCode = request.getParameter("baseCurrencyCode").toUpperCase();
         String targetCurrencyCode = request.getParameter("targetCurrencyCode").toUpperCase();
         String rate = request.getParameter("rate");
 
         if (!Utilities.areValidExchangeRatesFields(baseCurrencyCode, targetCurrencyCode, rate)) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ResponseMessage.MESSAGE_ER_PARAMETERS_ARE_INCORRECT.getMessage());
+            ErrorResponse.sendExchangeRateParametersAreNotValidError(response);
             return;
         }
 
-        if (exchangeRatesRepository.findByBaseCodeAndTargetCode(baseCurrencyCode, targetCurrencyCode).isPresent()) {
-            response.sendError(HttpServletResponse.SC_CONFLICT, ResponseMessage.MESSAGE_ER_IS_ALREADY_ADDED.getMessage());
+        if (!Utilities.isDouble(rate)) {
+            ErrorResponse.sendExchangeRateIsNotANumberError(response);
+            return;
+        }
+
+        if (exchangeRatesRepository.findByCodes(baseCurrencyCode, targetCurrencyCode).isPresent()) {
+            ErrorResponse.sendExchangeRateIsInListError(response);
             return;
         }
 
@@ -64,7 +76,7 @@ public class ExchangeRatesServlet extends HttpServlet {
         Optional<Currency> targetCurrency = currencyRepository.findByCode(targetCurrencyCode);
 
         if (!baseCurrency.isPresent() || !targetCurrency.isPresent()) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, ResponseMessage.MESSAGE_CUR_IS_NOT_FOUND.getMessage());
+            ErrorResponse.sendCurrencyIsNotFoundInListError(response);
             return;
         }
 
