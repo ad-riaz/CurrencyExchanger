@@ -15,7 +15,8 @@ public enum ResponseMessage {
     EXCHANGE_RATE_IS_EMPTY("Exchange rate is empty"),
     EXCHANGE_RATE_IS_NOT_A_NUMBER("Exchange rate is not a number. Example: 0.99"),
     
-    MESSAGE_AMOUNT_IS_NOT_A_NUMBER("Amount is not a number");
+    EXCHANGE_CODES_ARE_MISSING("Currency code are missing in the address. Please use the following mask: '/exchange?from=USD&to=UAH&amount=100.50'"),
+    EXCHANGE_AMOUNT_IS_NOT_A_NUMBER("Amount is not a number");
 
     @SerializedName("message")
     private String message;

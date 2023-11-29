@@ -41,19 +41,22 @@ public class ExchangeServlet extends HttpServlet {
         BigDecimal convertedAmount;
 
         // If parameters are null or empty then send error message
-        if (StringUtils.isEmpty(fromParameter) ||
-            StringUtils.isEmpty(toParameter)) {
-            sendExchangeResponseMessage(response, ResponseMessage.CURRENCY_IS_NOT_FOUND_IN_DB);
+        if (Utilities.areEmpty(fromParameter, toParameter)) {
+            sendExchangeResponseMessage(response, ResponseMessage.EXCHANGE_CODES_ARE_MISSING);
             return;
         }
 
-        if (StringUtils.isEmpty(amountParameter) && !Utilities.isDouble(amountParameter)) {
-            sendExchangeResponseMessage(response, ResponseMessage.MESSAGE_AMOUNT_IS_NOT_A_NUMBER);
+        // If amount is empty or if it is not a number
+        if (StringUtils.isEmpty(amountParameter) || !Utilities.isDouble(amountParameter)) {
+            sendExchangeResponseMessage(response, ResponseMessage.EXCHANGE_AMOUNT_IS_NOT_A_NUMBER);
             return;
         }
+        
+        Optional<Currency> baseCurrency = currencyRepository.findByCode(fromParameter);
+        Optional<Currency> targetCurrency = currencyRepository.findByCode(toParameter);
 
-        // If currencies are not available then send error message
-        if (!areCurrenciesValid(fromParameter, toParameter)) {
+        // If currencies are not available in the DB then send error message
+        if (!baseCurrency.isPresent() && !targetCurrency.isPresent()) {
             sendExchangeResponseMessage(response, ResponseMessage.CURRENCY_IS_NOT_FOUND_IN_DB);
             return;
         }
@@ -61,7 +64,7 @@ public class ExchangeServlet extends HttpServlet {
         // Get exchange rate from the repository using a pair of codes.
         // If there is no exchange rate for this pair of codes,
         // then it tries to find the exchange rate for the reverse order of the codes in the pair.
-        // If there are no any exchange rates for this pair of code then it returns 0.
+        // If there are no any exchange rates for this pair of code then it returns null.
         BigDecimal rate = getExchangeRate(fromParameter, toParameter);
 
         if (rate == null) {
@@ -70,12 +73,21 @@ public class ExchangeServlet extends HttpServlet {
         }
 
         amount = new BigDecimal(amountParameter).setScale(2, RoundingMode.DOWN);
-        convertedAmount = amount.multiply(rate).setScale(3, RoundingMode.DOWN);
+        convertedAmount = roundAccordingToTrashold(
+        		amount.multiply(rate).setScale(5, RoundingMode.DOWN)
+        );
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter writer = response.getWriter();
-        writer.print(new Gson().toJson(getExchangeObject(fromParameter, toParameter, rate, amount, convertedAmount)));
+        
+        writer.print(new Gson().toJson(getExchangeObject(
+        												baseCurrency, 
+        												targetCurrency, 
+        												rate, 
+        												amount, 
+        												convertedAmount))
+        );
     }
 
     private void sendExchangeResponseMessage(HttpServletResponse response, ResponseMessage message) throws IOException {
@@ -86,36 +98,49 @@ public class ExchangeServlet extends HttpServlet {
     }
 
     private BigDecimal getExchangeRate(String baseCode, String targetCode) {
-        BigDecimal rate;
+        BigDecimal rate = null;
+        
         Optional<ExchangeRate> exchangeRate = exchangeRatesRepository.findByCodes(baseCode, targetCode);
-        if (exchangeRate.isPresent()) return exchangeRate.get().getRate();
+        
+        if (exchangeRate.isPresent()) {
+        	rate = exchangeRate.get().getRate();
+        } else {
+        	Optional<ExchangeRate> reverseExchangeRate = exchangeRatesRepository.findByCodes(targetCode, baseCode);
+            
+        	if (reverseExchangeRate.isPresent()) {
+                rate = new BigDecimal("1").divide(reverseExchangeRate.get().getRate(), 5, RoundingMode.DOWN);
+            } else {
+            	Optional<ExchangeRate> exchangeRateUSD_base = exchangeRatesRepository.findByCodes("USD", baseCode);
+                Optional<ExchangeRate> exchangeRateUSD_target = exchangeRatesRepository.findByCodes("USD", targetCode);
 
-        Optional<ExchangeRate> reverseExchangeRate = exchangeRatesRepository.findByCodes(targetCode, baseCode);
-        if (reverseExchangeRate.isPresent()) {
-            return new BigDecimal("1").divide(reverseExchangeRate.get().getRate(), 3, RoundingMode.DOWN);
+                if (exchangeRateUSD_base.isPresent() && exchangeRateUSD_target.isPresent()) {
+                    rate = exchangeRateUSD_target.get().getRate()
+                    		.divide(exchangeRateUSD_base.get().getRate(), 5, RoundingMode.DOWN);
+                }
+            }            
         }
-
-        Optional<ExchangeRate> exchangeRateUSD_A = exchangeRatesRepository.findByCodes("USD", baseCode);
-        Optional<ExchangeRate> exchangeRateUSD_B = exchangeRatesRepository.findByCodes("USD", targetCode);
-
-        if (exchangeRateUSD_A.isPresent() && exchangeRateUSD_B.isPresent()) {
-            return exchangeRateUSD_B.get().getRate().divide(exchangeRateUSD_A.get().getRate(), 3, RoundingMode.DOWN);
-        }
-
-        return null;
+ 
+        return roundAccordingToTrashold(rate);
+    }
+    
+    private BigDecimal roundAccordingToTrashold(BigDecimal number) {
+    	BigDecimal firstTrashold = new BigDecimal("0.1");
+    	BigDecimal secondTrashold = new BigDecimal("0.01");
+    	
+    	if (number.compareTo(firstTrashold) < 0 &&
+    		number.compareTo(secondTrashold) > 0) {
+    		return number.setScale(3, RoundingMode.DOWN);
+    	} else if (number.compareTo(secondTrashold) <= 0) {
+    		return number.setScale(4, RoundingMode.DOWN);
+    	} else {
+    		return number.setScale(2, RoundingMode.DOWN);
+    	}
     }
 
-    private boolean areCurrenciesValid(String from, String to) {
-        Optional<Currency> baseCurrency = currencyRepository.findByCode(from);
-        Optional<Currency> targetCurrency = currencyRepository.findByCode(to);
-
-        return (baseCurrency.isPresent() && targetCurrency.isPresent());
-    }
-
-    private Exchange getExchangeObject(String fromCode, String toCode, BigDecimal rate, BigDecimal amount, BigDecimal convertedAmount) {
+    private Exchange getExchangeObject(Optional<Currency> baseCurrency, Optional<Currency> targetCurrency, BigDecimal rate, BigDecimal amount, BigDecimal convertedAmount) {
         return new Exchange(
-                currencyRepository.findByCode(fromCode).get(),
-                currencyRepository.findByCode(toCode).get(),
+                baseCurrency.get(),
+                targetCurrency.get(),
                 rate,
                 amount,
                 convertedAmount
