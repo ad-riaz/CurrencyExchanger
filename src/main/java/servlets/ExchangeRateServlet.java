@@ -75,8 +75,9 @@ public class ExchangeRateServlet extends HttpServlet {
             
             writer.print(new GsonBuilder().create().toJson(exchangeRate.get()));
             writer.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             ErrorResponse.sendInternalServerError(response, e.getMessage());
+            return;
         }
     }
 
@@ -126,7 +127,7 @@ public class ExchangeRateServlet extends HttpServlet {
                 ErrorResponse.sendExchangeRateIsNotANumberError(response);
                 return;
             }
-        } catch (IOException | ServletException e) {
+        } catch (Exception e) {
             ErrorResponse.sendInternalServerError(response, e.getMessage());
             return;
         }

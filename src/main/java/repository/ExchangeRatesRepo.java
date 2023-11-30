@@ -31,55 +31,47 @@ public class ExchangeRatesRepo implements ExchangeRatesRepository {
     }
 
     @Override
-    public void save(ExchangeRate entity) {
+    public void save(ExchangeRate entity) throws Exception{
         String query = "INSERT INTO ExchangeRates VALUES (NULL, ?, ?, ?)";
 
-        try {
-            Connection connection = dbManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setLong(1, entity.getBaseCurrency().getId());
-            statement.setLong(2, entity.getTargetCurrency().getId());
-            statement.setBigDecimal(3, entity.getRate());
-            statement.executeUpdate();
-            dbManager.closeConnection(connection);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        Connection connection = dbManager.getConnection();
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setLong(1, entity.getBaseCurrency().getId());
+        statement.setLong(2, entity.getTargetCurrency().getId());
+        statement.setBigDecimal(3, entity.getRate());
+        statement.executeUpdate();
+        dbManager.closeConnection(connection);
     }
 
     @Override
-    public Optional<ExchangeRate> findById(Long id) {
+    public Optional<ExchangeRate> findById(Long id) throws Exception {
         String query = "SELECT * FROM ExchangeRates WHERE id = ?";
         Optional<ExchangeRate> entity = Optional.ofNullable(null);
 
-        try {
-            Connection connection = dbManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setLong(1, id);
-            ResultSet resultSet = statement.executeQuery();
+        Connection connection = dbManager.getConnection();
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setLong(1, id);
+        ResultSet resultSet = statement.executeQuery();
 
-            if (resultSet.next()) {
+        if (resultSet.next()) {
 //                        FIXME: Move into separate method
-                ExchangeRate exchangeRate = new ExchangeRate(
-                        resultSet.getLong("id"),
-                        currencyRepository.findById(resultSet.getLong("baseCurrencyId")).get(),
-                        currencyRepository.findById(resultSet.getLong("targetCurrencyId")).get(),
-                        resultSet.getBigDecimal("rate")
-                );
+            ExchangeRate exchangeRate = new ExchangeRate(
+                    resultSet.getLong("id"),
+                    currencyRepository.findById(resultSet.getLong("baseCurrencyId")).get(),
+                    currencyRepository.findById(resultSet.getLong("targetCurrencyId")).get(),
+                    resultSet.getBigDecimal("rate")
+            );
 
-                entity = Optional.ofNullable(exchangeRate);
-            }
-
-            dbManager.closeConnection(connection);
-        } catch(SQLException e) {
-            throw new RuntimeException(e);
+            entity = Optional.ofNullable(exchangeRate);
         }
+
+        dbManager.closeConnection(connection);
 
         return entity;
     }
 
     @Override
-    public Optional<ExchangeRate> findByCodes(String baseCode, String targetCode) {
+    public Optional<ExchangeRate> findByCodes(String baseCode, String targetCode) throws Exception {
         Optional<ExchangeRate> entity = Optional.ofNullable(null);
         String query = "SELECT" +
                     "    er.id AS id," +
@@ -93,79 +85,67 @@ public class ExchangeRatesRepo implements ExchangeRatesRepository {
                     "              ON er.TargetCurrencyId = c2.id" +
                     "   WHERE c.code = ? AND c2.code = ?";
 
-        try {
-            Connection connection = dbManager.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, baseCode);
-            preparedStatement.setString(2, targetCode);
-            ResultSet resultSet = preparedStatement.executeQuery();
+        Connection connection = dbManager.getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.setString(1, baseCode);
+        preparedStatement.setString(2, targetCode);
+        ResultSet resultSet = preparedStatement.executeQuery();
 
-            if (resultSet.next()) {
-                ExchangeRate exchangeRate = new ExchangeRate();
-                exchangeRate.setId(resultSet.getLong("id"));
-                exchangeRate.setRate(resultSet.getBigDecimal("rate"));
-                exchangeRate.setBaseCurrency(currencyRepository.findById(resultSet.getLong("BaseCurrencyId")).get());
-                exchangeRate.setTargetCurrency(currencyRepository.findById(resultSet.getLong("TargetCurrencyId")).get());
+        if (resultSet.next()) {
+            ExchangeRate exchangeRate = new ExchangeRate();
+            exchangeRate.setId(resultSet.getLong("id"));
+            exchangeRate.setRate(resultSet.getBigDecimal("rate"));
+            exchangeRate.setBaseCurrency(currencyRepository.findById(resultSet.getLong("BaseCurrencyId")).get());
+            exchangeRate.setTargetCurrency(currencyRepository.findById(resultSet.getLong("TargetCurrencyId")).get());
 
-                entity = Optional.ofNullable(exchangeRate);
-            }
-            dbManager.closeConnection(connection);
-        } catch(SQLException e) {
-            throw new RuntimeException(e);
+            entity = Optional.ofNullable(exchangeRate);
         }
+        dbManager.closeConnection(connection);
 
         return entity;
     }
 
     @Override
-    public List<ExchangeRate> findAll() {
+    public List<ExchangeRate> findAll() throws Exception {
         List<ExchangeRate> rates = new ArrayList<>();
         String query = "SELECT * FROM ExchangeRates";
 
-        try {
-            Connection connection = dbManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet resultSet = statement.executeQuery();
+        Connection connection = dbManager.getConnection();
+        PreparedStatement statement = connection.prepareStatement(query);
+        ResultSet resultSet = statement.executeQuery();
 
-            while (resultSet.next()) {
-                ExchangeRate exchangeRate = new ExchangeRate(
+        while (resultSet.next()) {
+            ExchangeRate exchangeRate = new ExchangeRate(
 //                        FIXME: Move into separate method
-                        resultSet.getLong("id"),
-                        currencyRepository.findById(resultSet.getLong("baseCurrencyId")).get(),
-                        currencyRepository.findById(resultSet.getLong("targetCurrencyId")).get(),
-                        resultSet.getBigDecimal("rate")
-                );
-                rates.add(exchangeRate);
-            }
-            resultSet.close();
-            dbManager.closeConnection(connection);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+                    resultSet.getLong("id"),
+                    currencyRepository.findById(resultSet.getLong("baseCurrencyId")).get(),
+                    currencyRepository.findById(resultSet.getLong("targetCurrencyId")).get(),
+                    resultSet.getBigDecimal("rate")
+            );
+            rates.add(exchangeRate);
         }
-
+        resultSet.close();
+        dbManager.closeConnection(connection);
+        
         return rates;
     }
 
     @Override
-    public void update(ExchangeRate entity) {
+    public void update(ExchangeRate entity) throws Exception {
         String query = "UPDATE ExchangeRates SET BaseCurrencyId = ?, TargetCurrencyId = ?, rate = ? where id = ?";
 
-        try {
-            Connection connection = dbManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setLong(1, entity.getBaseCurrency().getId());
-            statement.setLong(2, entity.getTargetCurrency().getId());
-            statement.setBigDecimal(3, entity.getRate());
-            statement.setLong(4, entity.getId());
-            statement.executeUpdate();
-            dbManager.closeConnection(connection);
-        } catch(SQLException e) {
-            throw new RuntimeException(e);
-        }
+        Connection connection = dbManager.getConnection();
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setLong(1, entity.getBaseCurrency().getId());
+        statement.setLong(2, entity.getTargetCurrency().getId());
+        statement.setBigDecimal(3, entity.getRate());
+        statement.setLong(4, entity.getId());
+        statement.executeUpdate();
+        dbManager.closeConnection(connection);
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(Long id) throws Exception {
         String query = "DELETE FROM ExchangeRates WHERE id = ?";
         Utilities.deleteEntityById(query, id, dbManager);
     }

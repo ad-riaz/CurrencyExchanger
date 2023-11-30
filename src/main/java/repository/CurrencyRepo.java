@@ -29,91 +29,78 @@ public class CurrencyRepo implements CurrencyRepository {
     }
 
     @Override
-    public void save(Currency entity) {
+    public void save(Currency entity) throws Exception {
         String query = "INSERT INTO currencies VALUES (NULL, ?, ?, ?)";
 
-        try {
-            Connection connection = dbManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setString(1, entity.getCode());
-            statement.setString(2,entity.getFullName());
-            statement.setString(3, entity.getSign());
-            statement.executeUpdate();
-            dbManager.closeConnection(connection);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        Connection connection = dbManager.getConnection();
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setString(1, entity.getCode());
+        statement.setString(2,entity.getFullName());
+        statement.setString(3, entity.getSign());
+        statement.executeUpdate();
+        dbManager.closeConnection(connection);
     }
 
     @Override
-    public Optional<Currency> findById(Long id) {
+    public Optional<Currency> findById(Long id) throws Exception {
         String query = "SELECT * FROM currencies WHERE id = ?";
         Currency currency = null;
 
-        try {
-            Connection connection = dbManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setLong(1, id);
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                currency = createNewCurrency(resultSet);
-            }
-            resultSet.close();
-            dbManager.closeConnection(connection);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        
+	    Connection connection = dbManager.getConnection();
+	    PreparedStatement statement = connection.prepareStatement(query);
+	    statement.setLong(1, id);
+	    ResultSet resultSet = statement.executeQuery();
+	    if (resultSet.next()) {
+	        currency = createNewCurrency(resultSet);
+	    }
+	    resultSet.close();
+	    dbManager.closeConnection(connection);
+        
 
         return Optional.ofNullable(currency);
     }
 
     @Override
-    public Optional<Currency> findByCode(String code) {
+    public Optional<Currency> findByCode(String code) throws Exception {
         Currency currency = null;
         String query = "SELECT * FROM currencies WHERE code = ?";
 
-        try {
-            Connection connection = dbManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setString(1, code);
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                currency = createNewCurrency(resultSet);
-            }
-            resultSet.close();
-            dbManager.closeConnection(connection);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        Connection connection = dbManager.getConnection();
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setString(1, code);
+        ResultSet resultSet = statement.executeQuery();
+        if (resultSet.next()) {
+            currency = createNewCurrency(resultSet);
         }
+        resultSet.close();
+        dbManager.closeConnection(connection);
 
         return Optional.ofNullable(currency);
     }
 
     @Override
-    public List findAll() {
+    public List findAll() throws Exception {
         List<Currency> currencies = new ArrayList<>();
         String query = "SELECT * FROM currencies";
 
-        try {
-            Connection connection = dbManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet resultSet = statement.executeQuery();
+    
+        Connection connection = dbManager.getConnection();
+        PreparedStatement statement = connection.prepareStatement(query);
+        ResultSet resultSet = statement.executeQuery();
 
-            while (resultSet.next()) {
-                Currency cur = createNewCurrency(resultSet);
-                currencies.add(cur);
-            }
-            resultSet.close();
-            dbManager.closeConnection(connection);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        while (resultSet.next()) {
+            Currency cur = createNewCurrency(resultSet);
+            currencies.add(cur);
         }
+        resultSet.close();
+        dbManager.closeConnection(connection);
 
         return currencies;
     }
 
     @Override
-    public void update(Currency entity) {
+    public void update(Currency entity) throws Exception {
         String query =  "UPDATE currencies " +
                         "SET " +
                             "code = ?," +
@@ -121,22 +108,18 @@ public class CurrencyRepo implements CurrencyRepository {
                             "sign = ?" +
                         "WHERE id = ?";
 
-        try {
-            Connection connection = dbManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setString(1, entity.getCode());
-            statement.setString(2, entity.getFullName());
-            statement.setString(3, entity.getSign());
-            statement.setLong(4, entity.getId());
-            statement.executeUpdate();
-            dbManager.closeConnection(connection);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        Connection connection = dbManager.getConnection();
+        PreparedStatement statement = connection.prepareStatement(query);
+        statement.setString(1, entity.getCode());
+        statement.setString(2, entity.getFullName());
+        statement.setString(3, entity.getSign());
+        statement.setLong(4, entity.getId());
+        statement.executeUpdate();
+        dbManager.closeConnection(connection);
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(Long id) throws Exception {
         String query = "DELETE FROM currencies WHERE id = ?";
         Utilities.deleteEntityById(query, id, dbManager);
     }

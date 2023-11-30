@@ -48,7 +48,7 @@ public class CurrencyServlet extends HttpServlet {
 
             writer.print(new GsonBuilder().create().toJson(currency.get()));
             writer.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             ErrorResponse.sendInternalServerError(response, e.getMessage());
             return;
         }

@@ -7,6 +7,7 @@ import model.Exchange;
 import model.ExchangeRate;
 import repository.CurrencyRepo;
 import repository.ExchangeRatesRepo;
+import util.ErrorResponse;
 import util.Utilities;
 
 import javax.servlet.*;
@@ -34,60 +35,65 @@ public class ExchangeServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String fromParameter = request.getParameter("from").toUpperCase();
-        String toParameter = request.getParameter("to").toUpperCase();
-        String amountParameter = request.getParameter("amount").toUpperCase();
-        BigDecimal amount;
-        BigDecimal convertedAmount;
-
-        // If parameters are null or empty then send error message
-        if (Utilities.areEmpty(fromParameter, toParameter)) {
-            sendExchangeResponseMessage(response, ResponseMessage.EXCHANGE_CODES_ARE_MISSING);
+        try {
+        	String fromParameter = request.getParameter("from").toUpperCase();
+	        String toParameter = request.getParameter("to").toUpperCase();
+	        String amountParameter = request.getParameter("amount").toUpperCase();
+	        BigDecimal amount;
+	        BigDecimal convertedAmount;
+	
+	        // If parameters are null or empty then send error message
+	        if (Utilities.areEmpty(fromParameter, toParameter)) {
+	            sendExchangeResponseMessage(response, ResponseMessage.EXCHANGE_CODES_ARE_MISSING);
+	            return;
+	        }
+	
+	        // If amount is empty or if it is not a number
+	        if (StringUtils.isEmpty(amountParameter) || !Utilities.isDouble(amountParameter)) {
+	            sendExchangeResponseMessage(response, ResponseMessage.EXCHANGE_AMOUNT_IS_NOT_A_NUMBER);
+	            return;
+	        }
+	        
+	        Optional<Currency> baseCurrency = currencyRepository.findByCode(fromParameter);
+	        Optional<Currency> targetCurrency = currencyRepository.findByCode(toParameter);
+	
+	        // If currencies are not available in the DB then send error message
+	        if (!baseCurrency.isPresent() && !targetCurrency.isPresent()) {
+	            sendExchangeResponseMessage(response, ResponseMessage.CURRENCY_IS_NOT_FOUND_IN_DB);
+	            return;
+	        }
+	
+	        // Get exchange rate from the repository using a pair of codes.
+	        // If there is no exchange rate for this pair of codes,
+	        // then it tries to find the exchange rate for the reverse order of the codes in the pair.
+	        // If there are no any exchange rates for this pair of code then it returns null.
+	        BigDecimal rate = getExchangeRate(fromParameter, toParameter);
+	
+	        if (rate == null) {
+	            sendExchangeResponseMessage(response, ResponseMessage.EXCHANGE_RATE_IS_NOT_FOUND);
+	            return;
+	        }
+	
+	        amount = new BigDecimal(amountParameter).setScale(2, RoundingMode.DOWN);
+	        convertedAmount = roundAccordingToTrashold(
+	        		amount.multiply(rate).setScale(5, RoundingMode.DOWN)
+	        );
+	
+	        response.setContentType("application/json");
+	        response.setCharacterEncoding("UTF-8");
+	        PrintWriter writer = response.getWriter();
+	        
+	        writer.print(new Gson().toJson(getExchangeObject(
+	        												baseCurrency, 
+	        												targetCurrency, 
+	        												rate, 
+	        												amount, 
+	        												convertedAmount))
+	        );
+        } catch (Exception e) {
+            ErrorResponse.sendInternalServerError(response, e.getMessage());
             return;
         }
-
-        // If amount is empty or if it is not a number
-        if (StringUtils.isEmpty(amountParameter) || !Utilities.isDouble(amountParameter)) {
-            sendExchangeResponseMessage(response, ResponseMessage.EXCHANGE_AMOUNT_IS_NOT_A_NUMBER);
-            return;
-        }
-        
-        Optional<Currency> baseCurrency = currencyRepository.findByCode(fromParameter);
-        Optional<Currency> targetCurrency = currencyRepository.findByCode(toParameter);
-
-        // If currencies are not available in the DB then send error message
-        if (!baseCurrency.isPresent() && !targetCurrency.isPresent()) {
-            sendExchangeResponseMessage(response, ResponseMessage.CURRENCY_IS_NOT_FOUND_IN_DB);
-            return;
-        }
-
-        // Get exchange rate from the repository using a pair of codes.
-        // If there is no exchange rate for this pair of codes,
-        // then it tries to find the exchange rate for the reverse order of the codes in the pair.
-        // If there are no any exchange rates for this pair of code then it returns null.
-        BigDecimal rate = getExchangeRate(fromParameter, toParameter);
-
-        if (rate == null) {
-            sendExchangeResponseMessage(response, ResponseMessage.EXCHANGE_RATE_IS_NOT_FOUND);
-            return;
-        }
-
-        amount = new BigDecimal(amountParameter).setScale(2, RoundingMode.DOWN);
-        convertedAmount = roundAccordingToTrashold(
-        		amount.multiply(rate).setScale(5, RoundingMode.DOWN)
-        );
-
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        PrintWriter writer = response.getWriter();
-        
-        writer.print(new Gson().toJson(getExchangeObject(
-        												baseCurrency, 
-        												targetCurrency, 
-        												rate, 
-        												amount, 
-        												convertedAmount))
-        );
     }
 
     private void sendExchangeResponseMessage(HttpServletResponse response, ResponseMessage message) throws IOException {
@@ -97,7 +103,7 @@ public class ExchangeServlet extends HttpServlet {
         writer.print(Utilities.getExchangeErrorJson(message));
     }
 
-    private BigDecimal getExchangeRate(String baseCode, String targetCode) {
+    private BigDecimal getExchangeRate(String baseCode, String targetCode) throws Exception {
         BigDecimal rate = null;
         
         Optional<ExchangeRate> exchangeRate = exchangeRatesRepository.findByCodes(baseCode, targetCode);

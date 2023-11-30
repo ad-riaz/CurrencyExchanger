@@ -36,16 +36,15 @@ public class ExchangeRatesServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        List<ExchangeRate> exchangeRates = exchangeRatesRepository.findAll();
-
         try {
+        	List<ExchangeRate> exchangeRates = exchangeRatesRepository.findAll();
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             PrintWriter writer = response.getWriter();
         
             writer.print(new GsonBuilder().create().toJson(exchangeRates));
             writer.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             ErrorResponse.sendInternalServerError(response, e.getMessage());
             return;
         }
@@ -53,35 +52,40 @@ public class ExchangeRatesServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-        String baseCurrencyCode = request.getParameter("baseCurrencyCode").toUpperCase();
-        String targetCurrencyCode = request.getParameter("targetCurrencyCode").toUpperCase();
-        String rate = request.getParameter("rate");
-
-        if (!Utilities.areValidExchangeRatesFields(baseCurrencyCode, targetCurrencyCode, rate)) {
-            ErrorResponse.sendExchangeRateParametersAreNotValidError(response);
+	    try {   
+	    	String baseCurrencyCode = request.getParameter("baseCurrencyCode").toUpperCase();
+	        String targetCurrencyCode = request.getParameter("targetCurrencyCode").toUpperCase();
+	        String rate = request.getParameter("rate");
+	
+	        if (!Utilities.areValidExchangeRatesFields(baseCurrencyCode, targetCurrencyCode, rate)) {
+	            ErrorResponse.sendExchangeRateParametersAreNotValidError(response);
+	            return;
+	        }
+	
+	        if (!Utilities.isDouble(rate)) {
+	            ErrorResponse.sendExchangeRateIsNotANumberError(response);
+	            return;
+	        }
+	
+	        if (exchangeRatesRepository.findByCodes(baseCurrencyCode, targetCurrencyCode).isPresent()) {
+	            ErrorResponse.sendExchangeRateIsInListError(response);
+	            return;
+	        }
+	
+	        Optional<Currency> baseCurrency = currencyRepository.findByCode(baseCurrencyCode);
+	        Optional<Currency> targetCurrency = currencyRepository.findByCode(targetCurrencyCode);
+	
+	        if (!baseCurrency.isPresent() || !targetCurrency.isPresent()) {
+	            ErrorResponse.sendCurrencyIsNotFoundInListError(response);
+	            return;
+	        }
+	
+	        ExchangeRate exchangeRate = new ExchangeRate(baseCurrency.get(), targetCurrency.get(), new BigDecimal(rate));
+	        exchangeRatesRepository.save(exchangeRate);
+	        doGet(request, response);
+	    } catch (Exception e) {
+            ErrorResponse.sendInternalServerError(response, e.getMessage());
             return;
         }
-
-        if (!Utilities.isDouble(rate)) {
-            ErrorResponse.sendExchangeRateIsNotANumberError(response);
-            return;
-        }
-
-        if (exchangeRatesRepository.findByCodes(baseCurrencyCode, targetCurrencyCode).isPresent()) {
-            ErrorResponse.sendExchangeRateIsInListError(response);
-            return;
-        }
-
-        Optional<Currency> baseCurrency = currencyRepository.findByCode(baseCurrencyCode);
-        Optional<Currency> targetCurrency = currencyRepository.findByCode(targetCurrencyCode);
-
-        if (!baseCurrency.isPresent() || !targetCurrency.isPresent()) {
-            ErrorResponse.sendCurrencyIsNotFoundInListError(response);
-            return;
-        }
-
-        ExchangeRate exchangeRate = new ExchangeRate(baseCurrency.get(), targetCurrency.get(), new BigDecimal(rate));
-        exchangeRatesRepository.save(exchangeRate);
-        doGet(request, response);
     }
 }
