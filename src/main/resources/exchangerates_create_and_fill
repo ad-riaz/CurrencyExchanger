@@ -1,21 +1,17 @@
 CREATE TABLE IF NOT EXISTS ExchangeRates (
-    id               INTEGER PRIMARY KEY
-                             UNIQUE
-                             NOT NULL,
-    BaseCurrencyId   INTEGER REFERENCES currencies (id) 
-                             NOT NULL,
-    TargetCurrencyId INTEGER REFERENCES currencies (id) 
-                             NOT NULL,
-    Rate             NUMERIC NOT NULL
+    id                  INTEGER 
+                        PRIMARY KEY 
+                        UNIQUE 
+                        NOT NULL,
+    BaseCurrencyId      INTEGER 
+                        NOT NULL,
+    TargetCurrencyId    INTEGER 
+                        NOT NULL,
+    Rate                NUMERIC 
+                        NOT NULL,
+    UNIQUE (BaseCurrencyId, TargetCurrencyId),
+    FOREIGN KEY (BaseCurrencyId)
+        REFERENCES Currencies (id),
+    FOREIGN KEY (TargetCurrencyId)
+        REFERENCES Currencies (id)
 );
-
-
-
-INSERT INTO exchangerates VALUES (NULL, 2, 5, 1.08);
-INSERT INTO exchangerates VALUES (NULL, 5, 2, 0.93);
-
-INSERT INTO exchangerates VALUES (NULL, 5, 4, 96.47);
-INSERT INTO exchangerates VALUES (NULL, 4, 5, 0.01);
-
-INSERT INTO exchangerates VALUES (NULL, 2, 4, 104.02);
-INSERT INTO exchangerates VALUES (NULL, 4, 2, 0.0096);
