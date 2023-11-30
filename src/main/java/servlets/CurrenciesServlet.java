@@ -53,13 +53,6 @@ public class CurrenciesServlet extends HttpServlet {
 	            ErrorResponse.sendCurrencyParametersAreNotValidError(response);
 	            return;
 	        }
-	
-	        
-	        // TODO: Remove the next if statement
-	        if (repository.findByCode(code).isPresent()) {
-	            ErrorResponse.sendCurrencyIsAlreadyExistsError(response);
-	            return;
-	        }
 
         	repository.save(new Currency(code, name, sign));
         } catch (Exception e) {
