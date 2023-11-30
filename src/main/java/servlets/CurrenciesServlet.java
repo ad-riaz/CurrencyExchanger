@@ -28,16 +28,15 @@ public class CurrenciesServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        List<Currency> currencies = repository.findAll();
-        
         try {
+        	List<Currency> currencies = repository.findAll();
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             PrintWriter writer = response.getWriter();
 
             writer.print(new GsonBuilder().create().toJson(currencies));
             writer.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             ErrorResponse.sendInternalServerError(response, e.getMessage());
             return;
         }
@@ -45,21 +44,29 @@ public class CurrenciesServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-        String code = request.getParameter("code").toUpperCase();
-        String name = request.getParameter("name").toUpperCase();
-        String sign = request.getParameter("sign").toUpperCase();
+    	try {
+    		String code = request.getParameter("code").toUpperCase();
+    		String name = request.getParameter("name").toUpperCase();
+	        String sign = request.getParameter("sign").toUpperCase();
+	
+	        if (!Utilities.areValidCurrencyFields(code, name, sign)) {
+	            ErrorResponse.sendCurrencyParametersAreNotValidError(response);
+	            return;
+	        }
+	
+	        
+	        // TODO: Remove the next if statement
+	        if (repository.findByCode(code).isPresent()) {
+	            ErrorResponse.sendCurrencyIsAlreadyExistsError(response);
+	            return;
+	        }
 
-        if (!Utilities.areValidCurrencyFields(code, name, sign)) {
-            ErrorResponse.sendCurrencyParametersAreNotValidError(response);
-            return;
+        	repository.save(new Currency(code, name, sign));
+        } catch (Exception e) {
+        	ErrorResponse.sendInternalServerError(response, e.getMessage());
+        	return;
         }
-
-        if (repository.findByCode(code).isPresent()) {
-            ErrorResponse.sendCurrencyIsAlreadyExistsError(response);
-            return;
-        }
-
-        repository.save(new Currency(code, name, sign));
+        
         doGet(request, response);
     }
 }

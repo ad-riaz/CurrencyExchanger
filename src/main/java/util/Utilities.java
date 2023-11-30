@@ -54,16 +54,12 @@ public class Utilities {
         return (!areEmpty(pathInfo) && !pathInfo.equals("/") && pathInfo.length() == 7);
     }
 
-    public static void deleteEntityById(String query, Long id, DatabaseManager dbManager) {
-        try {
-            Connection connection = dbManager.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setLong(1, id);
-            preparedStatement.executeUpdate();
-            dbManager.closeConnection(connection);
-        } catch(SQLException e) {
-            throw new RuntimeException(e);
-        }
+    public static void deleteEntityById(String query, Long id, DatabaseManager dbManager) throws Exception {
+        Connection connection = dbManager.getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.setLong(1, id);
+        preparedStatement.executeUpdate();
+        dbManager.closeConnection(connection);
     }
 
     public static boolean isDouble(String string) {
