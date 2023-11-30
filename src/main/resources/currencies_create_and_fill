@@ -1,25 +1,28 @@
-CREATE TABLE IF NOT EXISTS currencies‹ (
-    id       INTEGER PRIMARY KEY
-                     NOT NULL
-                     UNIQUE,
-    code     TEXT    UNIQUE
-                     NOT NULL,
-    fullname TEXT    NOT NULL,
-    sign     TEXT
+CREATE TABLE IF NOT EXISTS Currencies (
+    id 			INTEGER	
+    			PRIMARY KEY 
+    			UNIQUE 
+    			NOT NULL,
+    code		TEXT 
+    			UNIQUE 
+    			NOT NULL,
+    fullname	TEXT 
+    			NOT NULL,
+    sign 		TEXT
 );
 
 INSERT INTO currencies VALUES (NULL, 'AUD', 'Australian dollar', 'A$');
 INSERT INTO currencies VALUES (NULL, 'EUR', 'Euro', '€');
-INSERT INTO currencies VALUES (NULL, 'BYN', 'Belarussian Ruble', BYN);
-INSERT INTO currencies VALUES (NULL, 'RUB', 'Russian Ruble', 'RUB');
+INSERT INTO currencies VALUES (NULL, 'BYN', 'Belarussian Ruble', 'Br');
+INSERT INTO currencies VALUES (NULL, 'RUB', 'Russian Ruble', '₽');
 INSERT INTO currencies VALUES (NULL, 'USD', 'US Dollar', '$');
-INSERT INTO currencies VALUES (NULL, 'UAH', 'Hryvnia', 'UAH');
-INSERT INTO currencies VALUES (NULL, 'GBP', 'Pound Sterling', 'GBP');
-INSERT INTO currencies VALUES (NULL, 'CNY', 'Yuan Renminbi', 'CNY');
-INSERT INTO currencies VALUES (NULL, 'COP', 'Colombian Peso', 'COP');
-INSERT INTO currencies VALUES (NULL, 'NZD', 'New Zealand Dollar', 'NZD');
-INSERT INTO currencies VALUES (NULL, 'GEL', 'Lari', 'GEL');
-INSERT INTO currencies VALUES (NULL, 'HKD', 'Hong Kong Dollar', 'HKD');
-INSERT INTO currencies VALUES (NULL, 'ILS', 'New Israeli Sheqel', 'ILS');
-INSERT INTO currencies VALUES (NULL, 'KZT', 'Tenge', 'KZT');
-INSERT INTO currencies VALUES (NULL, 'AMD', 'Armenian Dram', 'AMD');
+INSERT INTO currencies VALUES (NULL, 'UAH', 'Hryvnia', '₴');
+INSERT INTO currencies VALUES (NULL, 'GBP', 'Pound Sterling', '£');
+INSERT INTO currencies VALUES (NULL, 'CNY', 'Yuan Renminbi', '¥');
+INSERT INTO currencies VALUES (NULL, 'COP', 'Colombian Peso', '$');
+INSERT INTO currencies VALUES (NULL, 'NZD', 'New Zealand Dollar', '$');
+INSERT INTO currencies VALUES (NULL, 'GEL', 'Lari', '₾');
+INSERT INTO currencies VALUES (NULL, 'HKD', 'Hong Kong Dollar', 'HK$');
+INSERT INTO currencies VALUES (NULL, 'ILS', 'New Israeli Sheqel', '₪');
+INSERT INTO currencies VALUES (NULL, 'KZT', 'Tenge', '₸');
+INSERT INTO currencies VALUES (NULL, 'AMD', 'Armenian Dram', '֏');
