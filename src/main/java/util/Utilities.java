@@ -51,7 +51,7 @@ public class Utilities {
     }
 
     public static boolean isValidExchangeRatePath(String pathInfo) {
-        return (!areEmpty(pathInfo) || !pathInfo.equals("/") || pathInfo.length() == 7);
+        return (!areEmpty(pathInfo) && !pathInfo.equals("/") && pathInfo.length() == 7);
     }
 
     public static void deleteEntityById(String query, Long id, DatabaseManager dbManager) {
