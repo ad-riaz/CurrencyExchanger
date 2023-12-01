@@ -54,15 +54,7 @@ public class ExchangeRatesRepo implements ExchangeRatesRepository {
         ResultSet resultSet = statement.executeQuery();
 
         if (resultSet.next()) {
-//                        FIXME: Move into separate method
-            ExchangeRate exchangeRate = new ExchangeRate(
-                    resultSet.getLong("id"),
-                    currencyRepository.findById(resultSet.getLong("baseCurrencyId")).get(),
-                    currencyRepository.findById(resultSet.getLong("targetCurrencyId")).get(),
-                    resultSet.getBigDecimal("rate")
-            );
-
-            entity = Optional.ofNullable(exchangeRate);
+            entity = Optional.ofNullable(createNewExchangeRate(resultSet));
         }
 
         dbManager.closeConnection(connection);
@@ -115,15 +107,9 @@ public class ExchangeRatesRepo implements ExchangeRatesRepository {
         ResultSet resultSet = statement.executeQuery();
 
         while (resultSet.next()) {
-            ExchangeRate exchangeRate = new ExchangeRate(
-//                        FIXME: Move into separate method
-                    resultSet.getLong("id"),
-                    currencyRepository.findById(resultSet.getLong("baseCurrencyId")).get(),
-                    currencyRepository.findById(resultSet.getLong("targetCurrencyId")).get(),
-                    resultSet.getBigDecimal("rate")
-            );
-            rates.add(exchangeRate);
+        	rates.add(createNewExchangeRate(resultSet));
         }
+        
         resultSet.close();
         dbManager.closeConnection(connection);
         
@@ -148,5 +134,14 @@ public class ExchangeRatesRepo implements ExchangeRatesRepository {
     public void delete(Long id) throws Exception {
         String query = "DELETE FROM ExchangeRates WHERE id = ?";
         Utilities.deleteEntityById(query, id, dbManager);
+    }
+    
+    private ExchangeRate createNewExchangeRate(ResultSet set) throws Exception {
+    	return new ExchangeRate(
+                set.getLong("id"),
+                currencyRepository.findById(set.getLong("baseCurrencyId")).get(),
+                currencyRepository.findById(set.getLong("targetCurrencyId")).get(),
+                set.getBigDecimal("rate")
+        );
     }
 }

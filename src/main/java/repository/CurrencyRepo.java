@@ -46,7 +46,6 @@ public class CurrencyRepo implements CurrencyRepository {
         String query = "SELECT * FROM currencies WHERE id = ?";
         Currency currency = null;
 
-        
 	    Connection connection = dbManager.getConnection();
 	    PreparedStatement statement = connection.prepareStatement(query);
 	    statement.setLong(1, id);

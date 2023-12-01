@@ -8,19 +8,19 @@ public class PropertiesReader {
 
     public static String getProperty(String key) {
         try {
-            // Открытие потока чтения для файла application.properties
+            // Opening the input stream for application.properties file
             InputStream inputStream = PropertiesReader.class.getClassLoader()
                     .getResourceAsStream("application.properties");
 
             if (inputStream != null) {
-                // Создание объекта Properties
+                // Creation of Properties object
                 Properties properties = new Properties();
-                // Загрузка данных из файла application.properties
+                // Loading data from application.properties file
                 properties.load(inputStream);
-                // Закрытие потока чтения
+                // Closing input stream
                 inputStream.close();
 
-                // Возврат значения настройки по ключу
+                // Returning value of property by key
                 return properties.getProperty(key);
             } else {
                 System.err.println("Файл application.properties не найден.");
