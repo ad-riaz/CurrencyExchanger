@@ -99,4 +99,18 @@ public class ErrorResponse {
     public static void sendExchangeRateIsNotANumberError(HttpServletResponse response) {
         sendBadRequestStatus(response, ResponseMessage.EXCHANGE_RATE_IS_NOT_A_NUMBER);
     }
+    
+    
+    
+    public static void sendExchangeCodeAreMissingError(HttpServletResponse response) {
+    	sendBadRequestStatus(response, ResponseMessage.EXCHANGE_CODES_ARE_MISSING);
+    }
+    
+    public static void sendExchangeAmountIsNotANumberError(HttpServletResponse response) {
+    	sendBadRequestStatus(response, ResponseMessage.EXCHANGE_AMOUNT_IS_NOT_A_NUMBER);
+    }
+    
+    public static void sendExchangeRateIsNotFoundError(HttpServletResponse response) {
+    	sendNotFoundStatus(response, ResponseMessage.EXCHANGE_RATE_IS_NOT_FOUND);
+    }
 }

@@ -1,7 +1,6 @@
 package servlets;
 
 import com.google.gson.Gson;
-import enums.ResponseMessage;
 import model.Currency;
 import model.Exchange;
 import model.ExchangeRate;
@@ -44,13 +43,13 @@ public class ExchangeServlet extends HttpServlet {
 	
 	        // If parameters are null or empty then send error message
 	        if (Utilities.areEmpty(fromParameter, toParameter)) {
-	            sendExchangeResponseMessage(response, ResponseMessage.EXCHANGE_CODES_ARE_MISSING);
+	        	ErrorResponse.sendExchangeCodeAreMissingError(response);
 	            return;
 	        }
 	
 	        // If amount is empty or if it is not a number
 	        if (StringUtils.isEmpty(amountParameter) || !Utilities.isDouble(amountParameter)) {
-	            sendExchangeResponseMessage(response, ResponseMessage.EXCHANGE_AMOUNT_IS_NOT_A_NUMBER);
+	        	ErrorResponse.sendExchangeAmountIsNotANumberError(response);
 	            return;
 	        }
 	        
@@ -58,8 +57,8 @@ public class ExchangeServlet extends HttpServlet {
 	        Optional<Currency> targetCurrency = currencyRepository.findByCode(toParameter);
 	
 	        // If currencies are not available in the DB then send error message
-	        if (!baseCurrency.isPresent() && !targetCurrency.isPresent()) {
-	            sendExchangeResponseMessage(response, ResponseMessage.CURRENCY_IS_NOT_FOUND_IN_DB);
+	        if (!baseCurrency.isPresent() || !targetCurrency.isPresent()) {
+	        	ErrorResponse.sendCurrencyIsNotFoundInListError(response);
 	            return;
 	        }
 	
@@ -67,16 +66,17 @@ public class ExchangeServlet extends HttpServlet {
 	        // If there is no exchange rate for this pair of codes,
 	        // then it tries to find the exchange rate for the reverse order of the codes in the pair.
 	        // If there are no any exchange rates for this pair of code then it returns null.
-	        BigDecimal rate = getExchangeRate(fromParameter, toParameter);
+	        Optional<BigDecimal> rate = getExchangeRate(fromParameter, toParameter);
 	
-	        if (rate == null) {
-	            sendExchangeResponseMessage(response, ResponseMessage.EXCHANGE_RATE_IS_NOT_FOUND);
+	        // If exchange rate is not found send error message
+	        if (rate.isEmpty()) {
+	        	ErrorResponse.sendExchangeRateIsNotFoundError(response);
 	            return;
 	        }
 	
 	        amount = new BigDecimal(amountParameter).setScale(2, RoundingMode.DOWN);
 	        convertedAmount = roundAccordingToTrashold(
-	        		amount.multiply(rate).setScale(5, RoundingMode.DOWN)
+	        		amount.multiply(rate.get()).setScale(5, RoundingMode.DOWN)
 	        );
 	
 	        response.setContentType("application/json");
@@ -86,24 +86,17 @@ public class ExchangeServlet extends HttpServlet {
 	        writer.print(new Gson().toJson(getExchangeObject(
 	        												baseCurrency, 
 	        												targetCurrency, 
-	        												rate, 
+	        												rate.get(), 
 	        												amount, 
 	        												convertedAmount))
 	        );
         } catch (Exception e) {
-            ErrorResponse.sendInternalServerError(response, e.getMessage());
+            ErrorResponse.sendInternalServerError(response, e.getMessage() + "\n" + e.toString());
             return;
         }
     }
 
-    private void sendExchangeResponseMessage(HttpServletResponse response, ResponseMessage message) throws IOException {
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        PrintWriter writer = response.getWriter();
-        writer.print(Utilities.getExchangeErrorJson(message));
-    }
-
-    private BigDecimal getExchangeRate(String baseCode, String targetCode) throws Exception {
+    private Optional<BigDecimal> getExchangeRate(String baseCode, String targetCode) throws Exception {
         BigDecimal rate = null;
         
         Optional<ExchangeRate> exchangeRate = exchangeRatesRepository.findByCodes(baseCode, targetCode);
@@ -126,12 +119,16 @@ public class ExchangeServlet extends HttpServlet {
             }            
         }
  
-        return roundAccordingToTrashold(rate);
+        return Optional.ofNullable(roundAccordingToTrashold(rate));
     }
     
     private BigDecimal roundAccordingToTrashold(BigDecimal number) {
     	BigDecimal firstTrashold = new BigDecimal("0.1");
     	BigDecimal secondTrashold = new BigDecimal("0.01");
+    	
+    	if (number == null) {
+    		return null;
+    	}
     	
     	if (number.compareTo(firstTrashold) < 0 &&
     		number.compareTo(secondTrashold) > 0) {

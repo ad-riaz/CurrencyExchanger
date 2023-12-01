@@ -81,10 +81,4 @@ public class Utilities {
             return reader.lines().collect(Collectors.joining("\n"));
         }
     }
-    
-    public static String getExchangeErrorJson(ResponseMessage message) {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("message", message.getMessage());
-        return new Gson().toJson(jsonObject);
-    }
 }
