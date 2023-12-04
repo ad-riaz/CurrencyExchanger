@@ -15,8 +15,6 @@ public class ErrorResponse {
 	
 	private static void sendErrorResponseMessage(HttpServletResponse response, String message) {
 		try {
-			response.setContentType("application/json");
-			response.setCharacterEncoding("UTF-8");
 			PrintWriter writer = response.getWriter();
 			writer.print(getErrorResponseMessageJson(message));
 		} catch (IOException e) {

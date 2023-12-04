@@ -42,8 +42,6 @@ public class CurrencyServlet extends HttpServlet {
                 return;
             }
 
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
             PrintWriter writer = response.getWriter();
 
             writer.print(new GsonBuilder().create().toJson(currency.get()));

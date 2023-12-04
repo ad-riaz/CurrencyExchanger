@@ -68,9 +68,7 @@ public class ExchangeRateServlet extends HttpServlet {
                 ErrorResponse.sendExchangeRateNotFoundError(response);
                 return;
             }
-
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
+            
             PrintWriter writer = response.getWriter();
             
             writer.print(new GsonBuilder().create().toJson(exchangeRate.get()));

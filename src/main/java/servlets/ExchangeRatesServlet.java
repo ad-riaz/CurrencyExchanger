@@ -38,8 +38,6 @@ public class ExchangeRatesServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         try {
         	List<ExchangeRate> exchangeRates = exchangeRatesRepository.findAll();
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
             PrintWriter writer = response.getWriter();
         
             writer.print(new GsonBuilder().create().toJson(exchangeRates));

@@ -78,11 +78,8 @@ public class ExchangeServlet extends HttpServlet {
 	        convertedAmount = roundAccordingToTrashold(
 	        		amount.multiply(rate.get()).setScale(5, RoundingMode.DOWN)
 	        );
-	
-	        response.setContentType("application/json");
-	        response.setCharacterEncoding("UTF-8");
-	        PrintWriter writer = response.getWriter();
-	        
+
+	        PrintWriter writer = response.getWriter();	        
 	        writer.print(new Gson().toJson(getExchangeObject(
 	        												baseCurrency, 
 	        												targetCurrency, 

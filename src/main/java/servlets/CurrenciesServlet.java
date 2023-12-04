@@ -30,8 +30,6 @@ public class CurrenciesServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         try {
         	List<Currency> currencies = repository.findAll();
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
             PrintWriter writer = response.getWriter();
 
             writer.print(new GsonBuilder().create().toJson(currencies));
