@@ -5,6 +5,7 @@ import model.Currency;
 import repository.CurrencyRepo;
 import repository.CurrencyRepository;
 import util.ErrorResponse;
+import service.JsonParser;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.annotation.WebServlet;
@@ -44,7 +45,7 @@ public class CurrencyServlet extends HttpServlet {
 
             PrintWriter writer = response.getWriter();
 
-            writer.print(new GsonBuilder().create().toJson(currency.get()));
+            writer.print(JsonParser.toJson(currency.get()));
             writer.close();
         } catch (Exception e) {
             ErrorResponse.sendInternalServerError(response, e.getMessage());

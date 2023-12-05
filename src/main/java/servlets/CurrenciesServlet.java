@@ -4,6 +4,7 @@ import com.google.gson.GsonBuilder;
 import model.Currency;
 import repository.CurrencyRepo;
 import repository.CurrencyRepository;
+import service.JsonParser;
 import util.ErrorResponse;
 import util.Utilities;
 
@@ -32,7 +33,7 @@ public class CurrenciesServlet extends HttpServlet {
         	List<Currency> currencies = repository.findAll();
             PrintWriter writer = response.getWriter();
 
-            writer.print(new GsonBuilder().create().toJson(currencies));
+            writer.print(JsonParser.toJson(currencies));
             writer.close();
         } catch (Exception e) {
             ErrorResponse.sendInternalServerError(response, e.getMessage());

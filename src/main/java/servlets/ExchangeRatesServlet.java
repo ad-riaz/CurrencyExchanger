@@ -7,6 +7,7 @@ import repository.CurrencyRepo;
 import repository.CurrencyRepository;
 import repository.ExchangeRatesRepo;
 import repository.ExchangeRatesRepository;
+import service.JsonParser;
 import util.ErrorResponse;
 import util.Utilities;
 
@@ -40,7 +41,7 @@ public class ExchangeRatesServlet extends HttpServlet {
         	List<ExchangeRate> exchangeRates = exchangeRatesRepository.findAll();
             PrintWriter writer = response.getWriter();
         
-            writer.print(new GsonBuilder().create().toJson(exchangeRates));
+            writer.print(JsonParser.toJson(exchangeRates));
             writer.close();
         } catch (Exception e) {
             ErrorResponse.sendInternalServerError(response, e.getMessage());

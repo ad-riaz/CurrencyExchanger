@@ -6,6 +6,7 @@ import model.Exchange;
 import model.ExchangeRate;
 import repository.CurrencyRepo;
 import repository.ExchangeRatesRepo;
+import service.JsonParser;
 import util.ErrorResponse;
 import util.Utilities;
 
@@ -80,7 +81,7 @@ public class ExchangeServlet extends HttpServlet {
 	        );
 
 	        PrintWriter writer = response.getWriter();	        
-	        writer.print(new Gson().toJson(getExchangeObject(
+	        writer.print(JsonParser.toJson(getExchangeObject(
 	        												baseCurrency, 
 	        												targetCurrency, 
 	        												rate.get(), 
