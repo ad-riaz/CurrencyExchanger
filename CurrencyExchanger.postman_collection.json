@@ -1,0 +1,176 @@
+{
+	"info": {
+		"_postman_id": "25fe032e-0c00-4fcd-a61e-3fbba04e57da",
+		"name": "CurrencyExchanger",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "18884118"
+	},
+	"item": [
+		{
+			"name": "Get all currencies",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8080/CurrencyExchanger/currencies"
+			},
+			"response": []
+		},
+		{
+			"name": "Save a new currency",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "code",
+							"value": "XCD",
+							"type": "text"
+						},
+						{
+							"key": "name",
+							"value": "East Caribbean Dollar",
+							"type": "text"
+						},
+						{
+							"key": "sign",
+							"value": "XCD",
+							"type": "text"
+						}
+					]
+				},
+				"url": "http://localhost:8080/CurrencyExchanger/currencies"
+			},
+			"response": []
+		},
+		{
+			"name": "Get currency by code",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8080/CurrencyExchanger/currency/UAH"
+			},
+			"response": []
+		},
+		{
+			"name": "Get all exchangeRates",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8080/CurrencyExchanger_war/exchangeRates"
+			},
+			"response": []
+		},
+		{
+			"name": "Add new exchange rate",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "baseCurrencyCode",
+							"value": "USD",
+							"type": "text"
+						},
+						{
+							"key": "targetCurrencyCode",
+							"value": "UAH",
+							"type": "text"
+						},
+						{
+							"key": "rate",
+							"value": "36.80",
+							"type": "text"
+						}
+					]
+				},
+				"url": "http://localhost:8080/CurrencyExchanger/exchangeRates"
+			},
+			"response": []
+		},
+		{
+			"name": "Update the exchange rate",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "rate",
+							"value": "79",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/CurrencyExchanger/exchangeRate/BIFUAH",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"CurrencyExchanger",
+						"exchangeRate",
+						"BIFUAH"
+					],
+					"query": [
+						{
+							"key": "rate",
+							"value": "79",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get an exchange rate",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8080/CurrencyExchanger/exchangeRate/UAHBIF"
+			},
+			"response": []
+		},
+		{
+			"name": "Exchange",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/CurrencyExchanger/exchange?from=usd&to=uah&amount=1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"CurrencyExchanger",
+						"exchange"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "usd"
+						},
+						{
+							"key": "to",
+							"value": "uah"
+						},
+						{
+							"key": "amount",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
